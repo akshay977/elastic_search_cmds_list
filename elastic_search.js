@@ -1105,6 +1105,38 @@ GET /dummy_products/_search
   }
 }
 
+/*
+  Term level query to check if a field contains value or not
+*/
+GET /dummy_products/_search
+{
+  "query": {
+    "exists": {
+      "field": "tags.keyword"
+    }
+  }
+}
+
+/*
+  query to check if a field is null (Reverse of above query)
+*/
+GET /dummy_products/_search
+{
+  "query": {
+    "bool": {
+      "must_not": [
+        {
+          "exists": {
+            "field": "tags.keyword"
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+
 
 
 
