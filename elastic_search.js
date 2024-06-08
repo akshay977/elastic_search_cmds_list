@@ -888,6 +888,8 @@ POST /dummy_custom_analyzer/_update_by_query?conflicts=proceed
   2. Used to search structured data for exact values with correct case and value (filtering).
   3. Can be used on data types such as keyword, numbers, dates etc.
   4. Do not use term level queries on "text" datatype as you will get strange and unpredictable results.
+  5. All term level queries are case sensitive by default so use "case_insensitive" parameter to change 
+      this setting.
 */
 
 // Term-level query for searching vegetable (case sensitive)
@@ -922,3 +924,224 @@ GET /dummy_products/_search
     }
   }
 }
+
+// Term level query to search for document using _ids
+// Useful when _id is same as id column in relational DB.
+GET /dummy_products/_search
+{
+  "query": {
+    "ids": {
+      "values": ["100", "200", "300"]
+    }
+  }
+}
+
+/*
+  1. The range query is used to perform range searches
+  2. Eg. in_stock >= 1 and in_stock <= 12
+  3. Eg. createdAt >= 2020/01/01 and createdAt <= 2024/01/01
+*/
+GET /dummy_products/_search
+{
+  "query": {
+    "range": {
+      "in_stock": { // 
+        "gte": 1, // gte, lte, gt and lt are the parameters which can be used
+        "lte": 10
+      }
+    }
+  }
+}
+
+// Range query to search by range of dates without time
+/*
+  1. Dates are handled automatically. Elasticsearch will use the sensible defaults
+  automatically. In this case that would be between midnight and 1 sec before midnight.
+  But it is recommended to specify it specifically.
+
+  2. Dates should be specified in default date format
+      yyyy/MM/dd HH:mm:ss || yyyy/MM/dd || epoch_millis
+
+*/
+GET /dummy_products/_search
+{
+  "query": {
+    "range": {
+      "createdAt": { 
+        "gte": "2020/01/01",
+        "lte": "2024/01/01",
+        // "gte": "2020/01/01 00:00:00",
+        // "lte": "2024/01/01 23:59:59"
+      }
+    }
+  }
+}
+
+/*
+  format parameter is used to specify date format used in supplied date values
+*/
+GET /dummy_products/_search
+{
+  "query": {
+    "range": {
+      "createdAt": {
+        "format": "dd/MM/yyyy",
+        "gte": "01/01/2020",
+        "lte": "31/01/2020"
+      }
+    }
+  }
+}
+
+/*
+  Specifying the UTC offset:
+  1. If time zone is not specified the provided dates in query are assumed to be
+     in UTC format.
+
+  2. Dates in elastic search are stored as UTC dates by default.
+*/
+GET /dummy_products/_search
+{
+  "query": {
+    "range": {
+      "createdAt": {
+        "time_zone": "+01:00",
+        "gte": "01/01/2020",
+        "lte": "31/01/2020"
+      }
+    }
+  }
+}
+
+/*
+  Prefixes, wildcards and regular expressions:
+
+  1. Term level queries are used for exact matching. It is used to query non-analyzed
+      values with queries that are not analyzed.
+
+  2. Prefix, wildcards and regular expressions queries should be used only on "keyword"
+      fields only.
+*/
+
+/*
+  Prefix queries:
+    The value should contain the text at the start of the term and as the field is not analyzed
+    and if the value is in the middle of the term it will not be matched.
+*/
+GET /dummy_products/_search
+{
+  "query": {
+    "prefix": {
+      "name.keyword": {
+        "value": "Past"
+      }
+    }
+  }
+}
+
+/*
+  As the tags field contains array values and each term in the array is indexed separately
+  it can be matched using prefix query and there is no worry about value being at the
+  beginning of he field.
+*/
+GET /dummy_products/_search
+{
+  "query": {
+    "prefix": {
+      "tags.keyword": {
+        "value": "Past"
+      }
+    }
+  }
+}
+
+/*
+    Pattern       Terms
+
+    Past?         all terms starting with Past + 1 more character only like Pasta, Paste not Pastry, Pastist etc
+    Past*         all terms starting with Past + more characters like Pasta, Pastry, Pastism, etc.
+    *Past.        (AVOID THIS PATTERN !) all terms with any no. of characters before Past like root Past, dark Past, etc.
+*/
+
+GET /dummy_products/_search
+{
+  "query": {
+    "wildcard": {
+      "tags.keyword": {
+        "value": "Past?"
+      }
+    }
+  }
+}
+
+GET /dummy_products/_search
+{
+  "query": {
+    "wildcard": {
+      "tags.keyword": {
+        "value": "Past*"
+      }
+    }
+  }
+}
+
+/*
+  Regular expressions:
+  1. The regexp query matches terms that match a regular expression.
+  2. Regular expressions are patterns used for matching strings.
+  3. Allows more complex queries than the wildcard query.
+  4. Elastic search uses Apache Lucene's set of regular expressions which
+      may not be same as other engines' regular expressions
+*/
+
+GET /dummy_products/_search
+{
+  "query": {
+    "regexp": {
+      "tags.keyword": {
+        "value": "Bee(f|r){1}"
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
