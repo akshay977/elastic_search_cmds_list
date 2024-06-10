@@ -1105,6 +1105,114 @@ GET /dummy_products/_search
   }
 }
 
+/*
+  Term level query to check if a field contains value or not
+*/
+GET /dummy_products/_search
+{
+  "query": {
+    "exists": {
+      "field": "tags.keyword"
+    }
+  }
+}
+
+/*
+  query to check if a field is null (Reverse of above query)
+*/
+GET /dummy_products/_search
+{
+  "query": {
+    "bool": {
+      "must_not": [
+        {
+          "exists": {
+            "field": "tags.keyword"
+          }
+        }
+      ]
+    }
+  }
+}
+
+// ######## Introduction to full text queries ##########
+
+/*
+  1. Full text queries are used to search unstructured text values
+     Eg. Blog post, website content, emails, chats etc.
+
+  2. Full text queries are not used for exact matching and are analyzed 
+     the same way as the data is when it was indexed.
+
+  3. Don't query "keyword" fields with full text queries because the
+     field values were not analyzed.
+
+  4. If no analyzer is configured for the field standard analyzer is used
+*/
+
+// This query will search for PASTA in name field (Irrespective of its position in value)
+// The input value is analyzed before its compared with terms in inverted index
+GET /dummy_products/_search
+{
+  "query": {
+    "match": {
+      "name": "PASTA"
+    }
+  }
+}
+
+// This query will search for pasta OR chicken in name field (Irrespective of its position in value)
+// The input value is analyzed before its compared with terms in inverted index
+GET /dummy_products/_search
+{
+  "query": {
+    "match": {
+      "name": "pasta chicken"
+    }
+  }
+}
+
+/*
+  1. The default operator is OR which can be changed to AND using operator parameter.
+  2. Input value is converted to ["pasta", "chicken"] with AND operator which means
+     both values should be present in the name field.
+*/
+GET /dummy_products/_search
+{
+  "query": {
+    "match": {
+      "name": {
+       "query": "PASTA CHICKEN",
+       "operator": "and" 
+      }
+    }
+  }
+}
+
+/*
+  Introduction to relevance scoring
+
+  1. Each result has a relevance scoring given by _score field in the results.
+      It is calculated based on many factors and need not be studied.
+
+  2. Query results are sorted descendingly by the _score metadata field. _score is
+      a floating point number of how well a document matches a query.
+
+  3. The most relevant results are placed highest (Eg. like on google)
+
+  4. Documents matching term level queries are generally scored 1.0 or they don't
+      match at all.
+*/
+
+
+
+
+
+
+
+
+
+
 
 
 
